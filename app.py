@@ -107,14 +107,18 @@ def scan_photos_cloudinary():
     photos_by_month = {}
     
     try:
-        # Get all images from Cloudinary
+        # Get all images from Cloudinary (photos are in root folder)
         result = cloudinary.api.resources(
             type="upload",
-            prefix="home/beer_zoom/",  # Only get photos in home/beer_zoom folder
             max_results=500
         )
         
         for resource in result.get('resources', []):
+            public_id = resource['public_id']
+            # Skip sample images and other folders
+            if public_id.startswith(('samples/', 'media/', 'cld-sample', 'main-sample')):
+                continue
+
             file_date = get_cloudinary_date(resource)
             month_key = file_date.strftime("%Y-%m")
             month_display = file_date.strftime("%B %Y")
