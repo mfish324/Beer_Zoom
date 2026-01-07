@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Brew Sessions 🍺</title>
+    <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --beer-gold: #F4A623;
+            --beer-amber: #D87B00;
+            --beer-dark: #8B4513;
+            --foam-white: #FFF8DC;
+            --cream: #FFF5E1;
+            --dark-wood: #3E2723;
+            --barrel-oak: #5D4037;
+            --hop-green: #7CB342;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--barrel-oak) 0%, var(--dark-wood) 100%);
+            color: var(--foam-white);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(244, 166, 35, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(216, 123, 0, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, rgba(244, 166, 35, 0.15) 0%, transparent 100%);
+            border-radius: 20px;
+            border: 3px solid var(--beer-gold);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-family: 'Alfa Slab One', cursive;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            color: var(--beer-gold);
+            text-shadow: 
+                3px 3px 0 var(--beer-amber),
+                6px 6px 0 var(--beer-dark),
+                8px 8px 20px rgba(0, 0, 0, 0.8);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            line-height: 1.1;
+        }
+
+        .tagline {
+            font-family: 'Bebas Neue', cursive;
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            color: var(--foam-white);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .stats {
+            background: rgba(139, 69, 19, 0.3);
+            border: 2px solid var(--hop-green);
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.5rem;
+            color: var(--beer-gold);
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, var(--hop-green), #558B2F);
+            border: 2px solid var(--foam-white);
+            color: var(--foam-white);
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-btn:hover {
+            background: linear-gradient(135deg, #558B2F, var(--hop-green));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(124, 179, 66, 0.4);
+        }
+
+        .refresh-btn.spinning {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .month-section {
+            margin-bottom: 80px;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+            animation-delay: calc(var(--index) * 0.1s);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .month-header {
+            background: linear-gradient(135deg, var(--beer-amber) 0%, var(--beer-dark) 100%);
+            padding: 30px 40px;
+            border-radius: 15px 15px 0 0;
+            border: 2px solid var(--beer-gold);
+            border-bottom: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .month-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translate(-25%, -25%); }
+            50% { transform: translate(0%, 0%); }
+        }
+
+        .month-title {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2.5rem;
+            color: var(--foam-white);
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .month-theme {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            color: var(--cream);
+            font-weight: 300;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+        }
+
+        .month-theme::before {
+            content: '🍺';
+            margin-right: 10px;
+        }
+
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 40px;
+            background: rgba(93, 64, 55, 0.3);
+            border-radius: 0 0 15px 15px;
+            border: 2px solid var(--beer-gold);
+            border-top: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .photo-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(244, 166, 35, 0.3);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.1);
+        }
+
+        .photo-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            padding: 15px;
+            color: var(--foam-white);
+            font-size: 0.9rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .photo-card:hover .photo-label {
+            transform: translateY(0);
+        }
+
+        .live-indicator {
+            background: rgba(124, 179, 66, 0.2);
+            border: 2px solid var(--hop-green);
+            border-radius: 10px;
+            padding: 10px 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background: var(--hop-green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(124, 179, 66, 0.7); }
+            50% { opacity: 0.6; box-shadow: 0 0 0 10px rgba(124, 179, 66, 0); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+            color: var(--cream);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .photos-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .stats {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍻 MONTHLY BREW SESSIONS 🍻</h1>
+            <p class="tagline">Zoom Meetings • Good Friends • Cold Beers</p>
+            <div class="live-indicator">
+                <span class="pulse"></span>
+                Live Gallery - Auto-updates!
+            </div>
+        </header>
+
+        <div class="stats">
+            <span>{{ months_data|length }} Months of Memories</span>
+            <span>•</span>
+            <span>{{ total_photos }} Photos</span>
+            <button class="refresh-btn" onclick="manualRefresh()">
+                <span class="refresh-icon">🔄</span> Refresh Gallery
+            </button>
+        </div>
+
+        <div id="gallery">
+            {% for month_key, month_data in months_data %}
+            <div class="month-section" style="--index: {{ loop.index0 }}">
+                <div class="month-header">
+                    <h2 class="month-title">{{ month_data.display }}</h2>
+                    <p class="month-theme">{{ month_data.theme }}</p>
+                </div>
+                <div class="photos-grid">
+                    {% for photo in month_data.photos %}
+                    <div class="photo-card">
+                        <img src="{{ url_for('serve_photo', filename=photo.filename) }}" 
+                             alt="{{ photo.label }}"
+                             loading="lazy">
+                        <div class="photo-label">{{ photo.label }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <footer>
+            🍺 Cheers to friendship and good times! 🍺<br>
+            <small>Living gallery - new photos appear automatically</small>
+        </footer>
+    </div>
+
+    <script>
+        // Auto-refresh gallery every 30 seconds to check for new photos
+        setInterval(() => {
+            fetch('/api/photos')
+                .then(response => response.json())
+                .then(data => {
+                    // Count current photos
+                    const currentPhotos = document.querySelectorAll('.photo-card').length;
+                    const newPhotos = data.reduce((sum, month) => sum + month.photos.length, 0);
+                    
+                    // If photo count changed, reload the page
+                    if (newPhotos !== currentPhotos) {
+                        console.log('New photos detected! Refreshing...');
+                        location.reload();
+                    }
+                })
+                .catch(err => console.log('Auto-refresh check failed:', err));
+        }, 30000); // Check every 30 seconds
+
+        function manualRefresh() {
+            const btn = document.querySelector('.refresh-btn');
+            const icon = btn.querySelector('.refresh-icon');
+            
+            btn.classList.add('spinning');
+            icon.classList.add('spinner');
+            
+            location.reload();
+        }
+    </script>
+</body>
+</html>
