@@ -6,7 +6,7 @@ Supports both local storage and Cloudinary cloud storage
 
 from flask import Flask, render_template, send_from_directory, jsonify
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 app = Flask(__name__)
@@ -57,7 +57,7 @@ def get_file_date(filepath):
     return datetime.fromtimestamp(timestamp)
 
 def get_cloudinary_date(resource):
-    """Extract date from filename like Screenshot_2025-12-02_193707_xxx"""
+    """Extract date from filename like Screenshot_2025-12-02_193707_xxx or estimate from number"""
     import re
     public_id = resource.get('public_id', '')
 
@@ -71,7 +71,18 @@ def get_cloudinary_date(resource):
         except:
             pass
 
-    # Try simpler pattern: Screenshot_NNN (use created_at as fallback)
+    # For Screenshot_NNN format, estimate date based on number
+    # Assume screenshots span from early 2025, with higher numbers being more recent
+    num_match = re.search(r'Screenshot_(\d+)_', public_id)
+    if num_match:
+        num = int(num_match.group(1))
+        # Spread numbers 1-150 across Jan 2025 to Nov 2025 (before dated photos start in Dec)
+        # Each screenshot roughly 2 days apart
+        base_date = datetime(2025, 1, 1)
+        days_offset = min(num * 2, 330)  # Cap at ~Nov 2025
+        return base_date + timedelta(days=days_offset)
+
+    # Final fallback
     created_at = resource.get('created_at', '')
     try:
         return datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%SZ')

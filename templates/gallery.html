@@ -340,6 +340,63 @@
                 font-size: 1.2rem;
             }
         }
+
+        /* Lightbox styles */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(244, 166, 35, 0.3);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 50px;
+            color: var(--beer-gold);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .lightbox-close:hover {
+            color: var(--foam-white);
+        }
+
+        .lightbox-label {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--foam-white);
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .photo-card {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -371,7 +428,7 @@
                 </div>
                 <div class="photos-grid">
                     {% for photo in month_data.photos %}
-                    <div class="photo-card">
+                    <div class="photo-card" onclick="openLightbox('{{ photo.url }}', '{{ photo.label }}')">
                         <img src="{{ photo.url }}"
                              alt="{{ photo.label }}"
                              loading="lazy">
@@ -388,6 +445,38 @@
             <small>Living gallery - new photos appear automatically</small>
         </footer>
     </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="">
+        <div class="lightbox-label" id="lightbox-label"></div>
+    </div>
+
+    <script>
+        // Lightbox functions
+        function openLightbox(url, label) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            const labelEl = document.getElementById('lightbox-label');
+
+            img.src = url;
+            labelEl.textContent = label;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
 
     <script>
         // Auto-refresh gallery every 30 seconds to check for new photos
