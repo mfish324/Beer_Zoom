@@ -1,11 +1,13 @@
 """
 Auto-upload photos from local folder to Cloudinary
 Run this script whenever you want to sync new photos
+Preserves original file dates in Cloudinary metadata
 """
 
 import cloudinary
 import cloudinary.uploader
 from pathlib import Path
+from datetime import datetime
 import os
 
 # CONFIGURATION
@@ -19,6 +21,15 @@ def is_image(filename):
     """Check if file is an image"""
     image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
     return any(filename.lower().endswith(ext) for ext in image_extensions)
+
+def get_file_date(filepath):
+    """Get the original file date (creation or modification)"""
+    try:
+        # Try creation time first (Windows)
+        timestamp = os.path.getctime(filepath)
+    except:
+        timestamp = os.path.getmtime(filepath)
+    return datetime.fromtimestamp(timestamp)
 
 def get_uploaded_images():
     """Get list of images already uploaded to Cloudinary"""
@@ -65,11 +76,16 @@ def upload_new_photos():
     
     for filepath in new_photos:
         try:
-            print(f"   Uploading: {filepath.name}...", end=" ")
+            # Get original file date
+            file_date = get_file_date(filepath)
+            date_str = file_date.strftime("%Y-%m-%d %H:%M:%S")
+
+            print(f"   Uploading: {filepath.name} ({file_date.strftime('%b %d, %Y')})...", end=" ")
             result = cloudinary.uploader.upload(
                 str(filepath),
                 public_id=filepath.stem,
-                folder="beer_zoom"
+                folder="beer_zoom",
+                context=f"original_date={date_str}"  # Store original date in metadata
             )
             print("✅")
             uploaded += 1

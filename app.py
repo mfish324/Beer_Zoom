@@ -57,9 +57,19 @@ def get_file_date(filepath):
     return datetime.fromtimestamp(timestamp)
 
 def get_cloudinary_date(resource):
-    """Extract date from filename like Screenshot_2025-12-02_193707_xxx or estimate from number"""
+    """Get date from context metadata, filename, or estimate from number"""
     import re
     public_id = resource.get('public_id', '')
+
+    # First, check for original_date in context metadata (set during upload)
+    context = resource.get('context', {})
+    if isinstance(context, dict) and 'custom' in context:
+        original_date = context['custom'].get('original_date')
+        if original_date:
+            try:
+                return datetime.strptime(original_date, '%Y-%m-%d %H:%M:%S')
+            except:
+                pass
 
     # Try to extract date from filename pattern: Screenshot_YYYY-MM-DD_HHMMSS
     match = re.search(r'(\d{4}-\d{2}-\d{2})_(\d{6})', public_id)
@@ -72,14 +82,12 @@ def get_cloudinary_date(resource):
             pass
 
     # For Screenshot_NNN format, estimate date based on number
-    # Assume screenshots span from early 2025, with higher numbers being more recent
     num_match = re.search(r'Screenshot_(\d+)_', public_id)
     if num_match:
         num = int(num_match.group(1))
-        # Spread numbers 1-150 across Jan 2025 to Nov 2025 (before dated photos start in Dec)
-        # Each screenshot roughly 2 days apart
+        # Spread numbers 1-150 across Jan 2025 to Nov 2025
         base_date = datetime(2025, 1, 1)
-        days_offset = min(num * 2, 330)  # Cap at ~Nov 2025
+        days_offset = min(num * 2, 330)
         return base_date + timedelta(days=days_offset)
 
     # Final fallback
@@ -133,16 +141,23 @@ def scan_photos_cloudinary():
     
     try:
         # Get all images from Cloudinary (photos are in root folder)
+        # Include context to get original_date metadata
         result = cloudinary.api.resources(
             type="upload",
-            max_results=500
+            max_results=500,
+            context=True
         )
         
         for resource in result.get('resources', []):
             public_id = resource['public_id']
-            # Skip sample images and other folders
-            if public_id.startswith(('samples/', 'media/', 'cld-sample', 'main-sample')):
-                continue
+            # Only include beer_zoom photos, skip samples and other folders
+            if not public_id.startswith('beer_zoom/'):
+                # Also accept root-level Screenshot files (legacy)
+                if not public_id.startswith('Screenshot'):
+                    continue
+                # Skip sample images
+                if public_id.startswith(('samples/', 'media/', 'cld-sample', 'main-sample')):
+                    continue
 
             file_date = get_cloudinary_date(resource)
             month_key = file_date.strftime("%Y-%m")
