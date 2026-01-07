@@ -110,7 +110,7 @@ def scan_photos_cloudinary():
         # Get all images from Cloudinary
         result = cloudinary.api.resources(
             type="upload",
-            prefix="beer_zoom/",  # Only get photos in beer_zoom folder
+            prefix="home/beer_zoom/",  # Only get photos in home/beer_zoom folder
             max_results=500
         )
         
