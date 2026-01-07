@@ -57,7 +57,21 @@ def get_file_date(filepath):
     return datetime.fromtimestamp(timestamp)
 
 def get_cloudinary_date(resource):
-    """Get the upload date from Cloudinary resource"""
+    """Extract date from filename like Screenshot_2025-12-02_193707_xxx"""
+    import re
+    public_id = resource.get('public_id', '')
+
+    # Try to extract date from filename pattern: Screenshot_YYYY-MM-DD_HHMMSS
+    match = re.search(r'(\d{4}-\d{2}-\d{2})_(\d{6})', public_id)
+    if match:
+        date_str = match.group(1)
+        time_str = match.group(2)
+        try:
+            return datetime.strptime(f"{date_str}_{time_str}", '%Y-%m-%d_%H%M%S')
+        except:
+            pass
+
+    # Try simpler pattern: Screenshot_NNN (use created_at as fallback)
     created_at = resource.get('created_at', '')
     try:
         return datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%SZ')

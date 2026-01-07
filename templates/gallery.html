@@ -372,7 +372,7 @@
                 <div class="photos-grid">
                     {% for photo in month_data.photos %}
                     <div class="photo-card">
-                        <img src="{{ url_for('serve_photo', filename=photo.filename) }}" 
+                        <img src="{{ photo.url }}"
                              alt="{{ photo.label }}"
                              loading="lazy">
                         <div class="photo-label">{{ photo.label }}</div>
